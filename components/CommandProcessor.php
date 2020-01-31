@@ -7,6 +7,7 @@ namespace app\components;
 use app\models\Currencies;
 use app\models\CurrenciesToUsers;
 use app\models\Users;
+use yii\base\InvalidConfigException;
 
 /**
  * Обработчик комманд.
@@ -20,9 +21,11 @@ class CommandProcessor {
 
 	/**
 	 * @param int         $userId
-	 * @param string|null $userId
+	 * @param string|null $command
+	 *
+	 * @return string[]
 	 */
-	public function init(int $userId, ?string $command = '') {
+	public function init(int $userId, ?string $command = ''): array {
 		$result = [
 			'result'  => false,
 			'message' => '',
@@ -63,7 +66,7 @@ class CommandProcessor {
 	}
 
 	/**
-	 * УДалить пользователя
+	 * Удалить пользователя
 	 *
 	 * @param int $userId Идентификатор пользователя
 	 *
@@ -76,7 +79,6 @@ class CommandProcessor {
 
 		return true;
 	}
-
 
 	/**
 	 * Сохранить пользователя в базу
@@ -104,13 +106,13 @@ class CommandProcessor {
 		return true;
 	}
 
-
 	/**
+	 * Обработка сообщения
+	 *
 	 * @param int         $userId
 	 * @param string|null $text
 	 *
 	 * @return bool|string|null
-	 * @throws \yii\base\InvalidConfigException
 	 */
 	protected function process(int $userId, ?string $text = '') {
 		$this->saveUser($userId);
@@ -135,7 +137,7 @@ class CommandProcessor {
 	}
 
 	/**
-	 * Сохранить связб пользователя с валютой
+	 * Сохранить связь пользователя с валютой
 	 *
 	 * @param int        $userId
 	 * @param Currencies $cur

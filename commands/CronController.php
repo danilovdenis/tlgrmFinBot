@@ -22,7 +22,7 @@ class CronController extends Controller {
 	}
 
 	/**
-	 * Отправить курсы валбт пользователям.
+	 * Отправить курсы валют пользователям.
 	 */
 	public function actionGetEx() {
 		$messageService = \Yii::createObject(MessageService::class); /** @var  MessageService $messageService */
@@ -31,7 +31,7 @@ class CronController extends Controller {
 	}
 
 	/**
-	 * Отправить курс валюты пользоватедям
+	 * Отправить курс валюты пользователям
 	 */
 	public function actionSendRateToUsers() {
 		$messageService = \Yii::createObject(MessageService::class); /** @var  MessageService $messageService */
