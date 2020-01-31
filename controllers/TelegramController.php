@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace app\controllers;
 
+use app\components\CommandProcessor;
 use app\components\MessageService;
 use app\components\TelegramBotService;
-use app\models\Currencies;
-use app\models\CurrenciesToUsers;
-use app\models\Users;
+use Longman\TelegramBot\Exception\TelegramException;
 use Longman\TelegramBot\Telegram;
-use Yii;
+use yii\base\InvalidConfigException;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
 
@@ -46,9 +45,8 @@ class TelegramController extends Controller {
 	/**
 	 * Установка курса валют для пользователя
 	 *
-	 * @return string
-	 *
-	 * @throws
+	 * @throws TelegramException
+	 * @throws InvalidConfigException
 	 */
 	public function actionSet() {
 		$telegram = new Telegram((new TelegramBotService())->getToken(), 'exchageRatesBot');
@@ -59,64 +57,14 @@ class TelegramController extends Controller {
 
 		//@todo валидация
 		$userId = $input->message->from->id;
+		$text   = $input->message->text;
 
-		$userExists = Users::find()
-			->where([
-				Users::ATTR_TELEGRAMM_ID => $userId,
-			])
-			->exists();
+		$answer = (new CommandProcessor)->init($userId, $text);
 
-		if (false === $userExists) {
-			$users               = new Users;
-			$users->telegramm_id = $userId;
+		$message = \Yii::createObject(MessageService::class);
 
-			if (false === $users->save()) {
-				return false;
-			}
+		if (true === $answer['result']) {
+			$message->sendTestMessage($userId, $answer['message']);
 		}
-
-		$text = $input->message->text;
-
-		$curr = Currencies::find()
-			->all();/** @var Currencies[] $curr */
-
-		$message = Yii::createObject(MessageService::class);
-
-		foreach ($curr as $cur) {
-			if ($cur->short_name !== strtoupper($text)) {
-				continue;
-			}
-
-			$existLink = CurrenciesToUsers::find()
-				->where([
-					CurrenciesToUsers::ATTR_USER_ID => $userId,
-				])
-				->one();/** @var CurrenciesToUsers $existLink */
-
-			if (NULL === $existLink) {
-				$link          = new CurrenciesToUsers;
-				$link->user_id = $userId;
-				$link->cur_id  = $cur->id;
-
-				if (false === $link->save()) {
-					return false;
-				}
-			} else {
-				$existLink->cur_id = $cur->id;
-
-				if (false === $existLink->save()) {
-					return false;
-				}
-			}
-
-			$message->sendTestMessage($userId, 'Вы подписались на рассылку курса валюты: ' . strtoupper($text));
-
-			return true;
-		}
-
-		/** @var MessageService $message */
-		$message->sendTestMessage($userId, 'Укажите нужную валюту');
-
-		return true;
 	}
 }
